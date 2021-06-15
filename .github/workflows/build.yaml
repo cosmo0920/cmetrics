@@ -8,8 +8,8 @@ on:
       - master
     types: [opened, edited, synchronize]
 jobs:
-  build-windows:
-    name: Build sources on amd64 for ${{ matrix.os }}
+  build-windows-msvc:
+    name: Build sources on amd64 for ${{ matrix.os }} with MSVC
     runs-on: ${{ matrix.os }}
     strategy:
       max-parallel: 48
@@ -21,6 +21,36 @@ jobs:
       - name: Build on ${{ matrix.os }} with vs-2019
         run: |
           .\scripts\win_build.bat
+      - name: Run unit tests.
+        run: |
+          ctest -C Debug --test-dir .\tests\
+  build-windows-msys2:
+    name: Build sources on amd64 for ${{ matrix.os }} with MSYS2
+    runs-on: ${{ matrix.os }}
+    strategy:
+      max-parallel: 48
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+    env:
+      PATH: c:/Program Files/Git/cmd;c:/Program Files (x86)/Inno Setup 6;c:/Windows/system32;C:/Windows/System32/WindowsPowerShell/v1.0
+    steps:
+      - uses: actions/checkout@v2
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-make
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-binutils
+            mingw-w64-x86_64-libtool
+      - name: Build on ${{ matrix.os }} with MSYS2
+        shell: msys2 {0}
+        run: |
+          cmake -G "MSYS Makefiles" -DCMT_TESTS=On .
+          cmake --build .
       - name: Run unit tests.
         run: |
           ctest -C Debug --test-dir .\tests\
