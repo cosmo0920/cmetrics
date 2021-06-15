@@ -1,11 +1,7 @@
 name: Build PR(s) and master branch.
 on:
   push:
-    branches:
-      - master
   pull_request:
-    branches:
-      - master
     types: [opened, edited, synchronize]
 jobs:
   build-windows-msvc:
